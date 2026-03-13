@@ -17,34 +17,7 @@ Sistema de Gestão de Clínica de Reabilitação Cardíaca, migrado de Express/S
 
 ---
 
-## Configuração em 5 passos
-
-### 1. Criar o projeto no Supabase
-
-1. Acesse [supabase.com](https://supabase.com) → **New Project**
-2. Guarde a **URL** e as **chaves API** (Settings → API)
-3. Vá em **SQL Editor → New Query**, cole o conteúdo de `supabase-schema.sql` e execute
-
-### 2. Variáveis de ambiente
-
-```bash
-# Copie o template
-cp .env.example .env.local
-```
-
-Edite `.env.local` com seus valores reais:
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...
-
-# Gere uma string segura:
-# node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-SESSION_SECRET=sua-string-de-64-chars-aqui
-```
-
-### 3. Instalar e rodar localmente
+### Instalar e rodar localmente
 
 ```bash
 npm install
@@ -52,7 +25,7 @@ npm run dev
 # Acesse http://localhost:3000
 ```
 
-### 4. Popular o banco com dados de demonstração
+### Popular o banco com dados de demonstração
 
 ```bash
 npm run db:seed
@@ -65,47 +38,6 @@ npm run db:seed
 | mariaclara@onzemets.com   | 123456 | Médica Cardiologista          |
 | anaclara@onzemets.com     | 123456 | Fisioterapeuta Cardiovascular |
 | anne@onzemets.com         | 123456 | Fisioterapeuta Cardiovascular |
-
-### 5. Deploy na Vercel
-
-#### Opção A — Interface Web (mais simples)
-
-1. Faça push do projeto para um repositório GitHub/GitLab
-2. Acesse [vercel.com](https://vercel.com) → **New Project** → importe o repositório
-3. Em **Settings → Environment Variables**, adicione cada variável:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `SESSION_SECRET`
-4. Clique em **Deploy**
-
-#### Opção B — Vercel CLI (recomendado para equipes)
-
-```bash
-# Instalar CLI
-npm i -g vercel
-
-# Login e vincular projeto
-vercel login
-vercel link
-
-# Adicionar variáveis (uma por vez, escolha Production/Preview/Development)
-vercel env add NEXT_PUBLIC_SUPABASE_URL
-vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
-vercel env add SUPABASE_SERVICE_ROLE_KEY
-vercel env add SESSION_SECRET
-
-# Sincronizar .env.local com as variáveis da Vercel
-vercel env pull .env.local
-
-# Deploy em produção
-vercel --prod
-```
-
-#### Opção C — Integração direta Supabase × Vercel
-
-No Supabase Dashboard → **Project Settings → Integrations → Vercel**:
-conecte seu projeto e as variáveis `SUPABASE_URL` e `SUPABASE_ANON_KEY` são adicionadas automaticamente.
 
 ---
 
