@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { createServerClient } from "@/lib/supabase";
+import type { Consulta } from "@/types/database";
+
+type ConsultaRow = Consulta & {
+  pacientes: { nome: string } | null;
+  usuarios:  { nome: string } | null;
+};
 
 export async function GET() {
   const session = await getSession();
@@ -17,12 +23,9 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const mapped = (rows || []).map((c: Record<string, unknown>) => {
-    const pac  = c.pacientes as { nome: string } | null;
-    const prof = c.usuarios  as { nome: string } | null;
-    const { pacientes: _p, usuarios: _u, ...rest } = c;
-    return { ...rest, paciente_nome: pac?.nome ?? "", profissional_nome: prof?.nome ?? "" };
+  const mapped = ((rows ?? []) as ConsultaRow[]).map((c) => {
+    const { pacientes, usuarios, ...rest } = c;
+    return { ...rest, paciente_nome: pacientes?.nome ?? "", profissional_nome: usuarios?.nome ?? "" };
   });
-
   return NextResponse.json(mapped);
 }

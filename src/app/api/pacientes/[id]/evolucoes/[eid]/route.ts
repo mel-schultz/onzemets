@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { createServerClient } from "@/lib/supabase";
+import type { Evolucao } from "@/types/database";
 
 async function auth() { const s = await getSession(); return s.userId ? s : null; }
 
@@ -18,7 +19,7 @@ export async function PUT(req: NextRequest, { params }: { params: Params }) {
     .eq("paciente_id", id)
     .select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(row);
+  return NextResponse.json(row as Evolucao);
 }
 
 export async function DELETE(_: NextRequest, { params }: { params: Params }) {

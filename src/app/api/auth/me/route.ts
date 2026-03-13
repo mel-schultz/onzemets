@@ -8,11 +8,12 @@ export async function GET() {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
 
   const supabase = createServerClient();
-  const { data: user } = await supabase
+  const { data } = await supabase
     .from("usuarios")
     .select("id, nome, email, funcao, status")
     .eq("id", session.userId)
     .single();
 
-  return NextResponse.json(user || { error: "Usuário não encontrado." });
+  const user = data as { id: number; nome: string; email: string; funcao: string; status: string } | null;
+  return NextResponse.json(user ?? { error: "Usuário não encontrado." });
 }

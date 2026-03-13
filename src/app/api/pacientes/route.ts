@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { createServerClient } from "@/lib/supabase";
+import type { Paciente } from "@/types/database";
 
-async function auth() {
-  const session = await getSession();
-  if (!session.userId) return null;
-  return session;
-}
+async function auth() { const s = await getSession(); return s.userId ? s : null; }
 
 export async function GET(req: NextRequest) {
   if (!await auth()) return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
@@ -22,7 +19,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  return NextResponse.json((data ?? []) as Paciente[]);
 }
 
 export async function POST(req: NextRequest) {
@@ -34,5 +31,5 @@ export async function POST(req: NextRequest) {
   const supabase = createServerClient();
   const { data, error } = await supabase.from("pacientes").insert(body).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data, { status: 201 });
+  return NextResponse.json(data as Paciente, { status: 201 });
 }

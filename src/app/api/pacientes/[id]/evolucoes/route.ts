@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { createServerClient } from "@/lib/supabase";
+import type { Evolucao } from "@/types/database";
 
 async function auth() { const s = await getSession(); return s.userId ? s : null; }
 
@@ -17,10 +18,10 @@ export async function GET(_: NextRequest, { params }: { params: Params }) {
     .order("data", { ascending: false })
     .order("id", { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  const mapped = (data || []).map((e: Record<string, unknown>) => {
-    const u = e.usuarios as { nome: string } | null;
-    const { usuarios: _, ...rest } = e;
-    return { ...rest, criado_por_nome: u?.nome ?? null };
+
+  const mapped = ((data ?? []) as (Evolucao & { usuarios: { nome: string } | null })[]).map((e) => {
+    const { usuarios, ...rest } = e;
+    return { ...rest, criado_por_nome: usuarios?.nome ?? null };
   });
   return NextResponse.json(mapped);
 }
@@ -43,5 +44,5 @@ export async function POST(req: NextRequest, { params }: { params: Params }) {
     })
     .select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(row, { status: 201 });
+  return NextResponse.json(row as Evolucao, { status: 201 });
 }
