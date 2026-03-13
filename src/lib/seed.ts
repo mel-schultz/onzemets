@@ -31,7 +31,7 @@ async function main() {
 
   const { data: usersInserted, error: uErr } = await supabase
     .from("usuarios")
-    .insert(usuarios.map(u => ({ ...u, senha_hash: bcrypt.hashSync(u.senha, 10), senha: undefined })))
+    .insert(usuarios.map(({ senha, ...u }) => ({ ...u, senha_hash: bcrypt.hashSync(senha, 10) })))
     .select();
 
   if (uErr) { console.error("❌ Erro ao inserir usuários:", uErr.message); process.exit(1); }
