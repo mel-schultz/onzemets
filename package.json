@@ -1,0 +1,30 @@
+{
+  "name": "onzemets",
+  "version": "1.0.0",
+  "description": "OnzeMETs — Sistema de Gestão de Clínica de Reabilitação Cardíaca",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:seed": "npx tsx src/lib/seed.ts"
+  },
+  "dependencies": {
+    "next": "^15.3.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@supabase/supabase-js": "^2.44.4",
+    "bcryptjs": "^2.4.3",
+    "iron-session": "^8.0.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/bcryptjs": "^2.4.6",
+    "typescript": "^5",
+    "tsx": "^4.16.0"
+  }
+}
