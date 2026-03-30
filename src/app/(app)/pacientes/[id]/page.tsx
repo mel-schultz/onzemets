@@ -1,6 +1,7 @@
 "use client";
 import{useEffect,useState,useCallback}from"react";
 import{useRouter,useParams}from"next/navigation";
+import RichTextEditor from"@/components/RichTextEditor";
 interface Pac{id:number;nome:string;sexo:string|null;data_nasc:string|null;ultima_consulta:string|null;proxima_consulta:string|null;faltas:number;cpf:string|null;telefone:string|null;telefone2:string|null;email:string|null;cep:string|null;rua:string|null;numero:string|null;complemento:string|null;bairro:string|null;cidade:string|null;estado:string|null;}
 interface Evo{id:number;titulo:string;texto:string;tipo:string;data:string;criado_por_nome:string|null;}
 function fmt(iso:string|null){if(!iso)return"—";const[y,m,d]=iso.split("-");return`${d}/${m}/${y}`;}
@@ -41,7 +42,7 @@ export default function PatientDetailPage(){
   }
 
   async function saveAdd(){
-    if(!addForm.titulo||!addForm.texto){showToast("Preencha título e texto","error");return;}
+    if(!addForm.titulo||!addForm.texto){showToast("Preencha título e descrição","error");return;}
     const tipo=modalAdd.type;
     const evoData={titulo:addForm.titulo,texto:addForm.texto,tipo:tipo,data:addForm.data};
     const res=await fetch(`/api/pacientes/${id}/evolucoes`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(evoData)});
@@ -78,6 +79,10 @@ export default function PatientDetailPage(){
     setAddForm({titulo:"",texto:"",data:today()});
     setModalAdd({open:true,type});
   };
+
+  const renderEvoContent=(evo:Evo)=>(
+    <div dangerouslySetInnerHTML={{__html:evo.texto}}/>
+  );
 
   return(
     <div>
@@ -127,7 +132,7 @@ export default function PatientDetailPage(){
               {clinicas.length>0?(
                 <>
                   <div className="pcard-date">{fmt(clinicas[0].data)}</div>
-                  <div className="pcard-text">{clinicas[0].texto}</div>
+                  <div className="pcard-text">{clinicas[0].titulo}</div>
                 </>
               ):(
                 <div className="pcard-text">Nenhuma atualização clínica.</div>
@@ -144,7 +149,7 @@ export default function PatientDetailPage(){
                             <button className="btn btn-danger btn-sm" onClick={()=>delEvo(e.id)}>🗑</button>
                           </div>
                         </div>
-                        <div className="evo-txt">{e.texto}</div>
+                        <div className="evo-txt">{renderEvoContent(e)}</div>
                       </div>
                     ))}
                   </div>
@@ -162,7 +167,7 @@ export default function PatientDetailPage(){
                 <>
                   <div className="pcard-num">{reab[0].titulo}</div>
                   <div className="pcard-divider" style={{margin:"8px 0"}}/>
-                  <div className="pcard-text">{reab[0].texto}</div>
+                  <div className="pcard-text">{reab[0].texto.substring(0,100)}...</div>
                 </>
               ):(
                 <div className="pcard-text">Nenhuma evolução de reabilitação.</div>
@@ -179,7 +184,7 @@ export default function PatientDetailPage(){
                             <button className="btn btn-danger btn-sm" onClick={()=>delEvo(e.id)}>🗑</button>
                           </div>
                         </div>
-                        <div className="evo-txt">{e.texto}</div>
+                        <div className="evo-txt">{renderEvoContent(e)}</div>
                       </div>
                     ))}
                   </div>
@@ -195,7 +200,7 @@ export default function PatientDetailPage(){
                 <>
                   <div className="pcard-num">{avaliacao[0].titulo}</div>
                   <div className="pcard-divider" style={{margin:"8px 0"}}/>
-                  <div className="pcard-text">{avaliacao[0].texto}</div>
+                  <div className="pcard-text">{avaliacao[0].texto.substring(0,100)}...</div>
                 </>
               ):(
                 <div className="pcard-text" style={{color:"var(--gray)"}}>Nenhuma avaliação física registrada.</div>
@@ -212,7 +217,7 @@ export default function PatientDetailPage(){
                             <button className="btn btn-danger btn-sm" onClick={()=>delEvo(e.id)}>🗑</button>
                           </div>
                         </div>
-                        <div className="evo-txt">{e.texto}</div>
+                        <div className="evo-txt">{renderEvoContent(e)}</div>
                       </div>
                     ))}
                   </div>
@@ -228,7 +233,7 @@ export default function PatientDetailPage(){
                 <>
                   <div className="pcard-num">{historico[0].titulo}</div>
                   <div className="pcard-divider" style={{margin:"8px 0"}}/>
-                  <div className="pcard-text">{historico[0].texto}</div>
+                  <div className="pcard-text">{historico[0].texto.substring(0,100)}...</div>
                 </>
               ):(
                 <div className="pcard-text" style={{color:"var(--gray)"}}>Nenhum histórico adicional.</div>
@@ -245,7 +250,7 @@ export default function PatientDetailPage(){
                             <button className="btn btn-danger btn-sm" onClick={()=>delEvo(e.id)}>🗑</button>
                           </div>
                         </div>
-                        <div className="evo-txt">{e.texto}</div>
+                        <div className="evo-txt">{renderEvoContent(e)}</div>
                       </div>
                     ))}
                   </div>
@@ -292,7 +297,7 @@ export default function PatientDetailPage(){
                       <button className="btn btn-danger btn-sm" onClick={()=>delEvo(e.id)}>🗑</button>
                     </div>
                   </div>
-                  <div className="evo-txt">{e.texto}</div>
+                  <div className="evo-txt">{renderEvoContent(e)}</div>
                 </div>
               ))}
           </div>
@@ -302,7 +307,7 @@ export default function PatientDetailPage(){
       {/* MODAL VIEW (GENERIC) */}
       {modalView.open && (
         <div className="modal-overlay open" onClick={e=>e.target===e.currentTarget&&setModalView(f=>({...f,open:false}))}>
-          <div className="modal">
+          <div className="modal" style={{maxWidth:"800px"}}>
             <button className="modal-close" onClick={()=>setModalView(f=>({...f,open:false}))}>✕</button>
             <div className="modal-title">{modalView.title}</div>
             <div style={{maxHeight: '60vh', overflowY: 'auto'}}>
@@ -318,7 +323,7 @@ export default function PatientDetailPage(){
       {/* MODAL ADD */}
       {modalAdd.open && (
         <div className="modal-overlay open" onClick={e=>e.target===e.currentTarget&&setModalAdd({open:false,type:""})}>
-          <div className="modal">
+          <div className="modal" style={{maxWidth:"800px"}}>
             <button className="modal-close" onClick={()=>setModalAdd({open:false,type:""})}>✕</button>
             <div className="modal-title">
               {modalAdd.type==="clinica"?"Adicionar Atualização Clínica":
@@ -327,7 +332,7 @@ export default function PatientDetailPage(){
                "Adicionar Histórico Clínico"}
             </div>
             <div className="form-grid">
-              <div className="form-group">
+              <div className="form-group form-full">
                 <label className="form-label">Título *</label>
                 <input className="form-input" value={addForm.titulo} onChange={e=>setAddForm(f=>({...f,titulo:e.target.value}))}/>
               </div>
@@ -337,7 +342,7 @@ export default function PatientDetailPage(){
               </div>
               <div className="form-group form-full">
                 <label className="form-label">Descrição *</label>
-                <textarea className="form-textarea" rows={6} value={addForm.texto} onChange={e=>setAddForm(f=>({...f,texto:e.target.value}))}/>
+                <RichTextEditor value={addForm.texto} onChange={t=>setAddForm(f=>({...f,texto:t}))} placeholder="Digite a descrição aqui..."/>
               </div>
             </div>
             <div className="modal-actions">
@@ -351,11 +356,11 @@ export default function PatientDetailPage(){
       {/* MODAL EVOLUÇÃO */}
       {modalEvo&&(
         <div className="modal-overlay open" onClick={e=>e.target===e.currentTarget&&setModalEvo(false)}>
-          <div className="modal">
+          <div className="modal" style={{maxWidth:"800px"}}>
             <button className="modal-close" onClick={()=>setModalEvo(false)}>✕</button>
             <div className="modal-title">{editEvoId?"Editar Evolução":"Nova Evolução"}</div>
             <div className="form-grid">
-              <div className="form-group">
+              <div className="form-group form-full">
                 <label className="form-label">Título *</label>
                 <input className="form-input" value={evoForm.titulo} onChange={e=>setEvoForm(f=>({...f,titulo:e.target.value}))}/>
               </div>
@@ -374,7 +379,7 @@ export default function PatientDetailPage(){
               </div>
               <div className="form-group form-full">
                 <label className="form-label">Texto *</label>
-                <textarea className="form-textarea" rows={6} value={evoForm.texto} onChange={e=>setEvoForm(f=>({...f,texto:e.target.value}))}/>
+                <RichTextEditor value={evoForm.texto} onChange={t=>setEvoForm(f=>({...f,texto:t}))} placeholder="Digite o texto aqui..."/>
               </div>
             </div>
             <div className="modal-actions">
