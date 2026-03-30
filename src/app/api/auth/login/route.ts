@@ -20,7 +20,6 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Busca o usuário pelo e-mail
-    console.log(`[login] Tentando autenticar: ${email}`);
     const { data, error: dbError } = await supabase
       .from("usuarios")
       .select("*")
@@ -30,7 +29,6 @@ export async function POST(req: NextRequest) {
     if (dbError) {
       // PGRST116 = "no rows returned" — e-mail não encontrado
       if (dbError.code === "PGRST116") {
-        console.log(`[login] Usuário não encontrado: ${email}`);
         return NextResponse.json({ error: "E-mail ou senha incorretos." }, { status: 401 });
       }
       console.error("[login] Erro Supabase:", dbError.code, dbError.message);
@@ -40,20 +38,16 @@ export async function POST(req: NextRequest) {
     const user = data as Usuario | null;
 
     if (!user) {
-      console.log(`[login] Usuário nulo para: ${email}`);
       return NextResponse.json({ error: "E-mail ou senha incorretos." }, { status: 401 });
     }
 
     // 3. Verifica a senha
-    console.log(`[login] Verificando senha para: ${user.nome}`);
     const senhaCorreta = bcrypt.compareSync(senha, user.senha_hash);
     if (!senhaCorreta) {
-      console.log(`[login] Senha incorreta para: ${email}`);
       return NextResponse.json({ error: "E-mail ou senha incorretos." }, { status: 401 });
     }
 
     // 4. Cria a sessão
-    console.log(`[login] Criando sessão para: ${user.nome}`);
     const session = await getSession();
     session.userId     = user.id;
     session.userName   = user.nome;
@@ -61,7 +55,6 @@ export async function POST(req: NextRequest) {
     session.userFuncao = user.funcao;
     await session.save();
 
-    console.log(`[login] Login bem-sucedido para: ${user.nome}`);
     const { senha_hash: _, ...safe } = user;
     return NextResponse.json({ message: "Login realizado.", user: safe });
 
