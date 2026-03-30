@@ -15,8 +15,10 @@ export default function PatientDetailPage(){
   const[tab,setTab]=useState<"perfil"|"dados"|"evolucoes">("perfil");
   const[modalEvo,setModalEvo] = useState(false);
   const[modalView,setModalView] = useState<{open:boolean;title:string;content:React.ReactNode}>({open:false,title:"",content:null});
+  const[modalAdd,setModalAdd] = useState<{open:boolean;type:string}>({open:false,type:""});
   const[editEvoId,setEditEvoId]=useState<number|null>(null);
   const[evoForm,setEvoForm]=useState({titulo:"",texto:"",tipo:"clinica",data:today()});
+  const[addForm,setAddForm]=useState({titulo:"",texto:"",data:today()});
   const[toast,setToast]=useState<{msg:string;type:string}|null>(null);
   function showToast(msg:string,type=""){setToast({msg,type});setTimeout(()=>setToast(null),3200);}
 
@@ -37,6 +39,16 @@ export default function PatientDetailPage(){
     if(!res.ok){const d=await res.json();showToast(d.error||"Erro","error");return;}
     setModalEvo(false);showToast("Evolução salva!","success");load();
   }
+
+  async function saveAdd(){
+    if(!addForm.titulo||!addForm.texto){showToast("Preencha título e texto","error");return;}
+    const tipo=modalAdd.type;
+    const evoData={titulo:addForm.titulo,texto:addForm.texto,tipo:tipo,data:addForm.data};
+    const res=await fetch(`/api/pacientes/${id}/evolucoes`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(evoData)});
+    if(!res.ok){const d=await res.json();showToast(d.error||"Erro","error");return;}
+    setModalAdd({open:false,type:""});setAddForm({titulo:"",texto:"",data:today()});showToast("Item adicionado!","success");load();
+  }
+
   async function delEvo(eid:number){
     if(!confirm("Remover esta evolução?"))return;
     await fetch(`/api/pacientes/${id}/evolucoes/${eid}`,{method:"DELETE"});
@@ -46,7 +58,9 @@ export default function PatientDetailPage(){
   if(!pac)return<div className="loading"><span className="spinner"/>Carregando...</div>;
 
   const clinicas=evos.filter(e=>e.tipo==="clinica");
-  const reab=evos.filter(e=>e.tipo!=="clinica");
+  const reab=evos.filter(e=>e.tipo==="reabilitacao");
+  const avaliacao=evos.filter(e=>e.tipo==="avaliacao");
+  const historico=evos.filter(e=>e.tipo==="historico");
   const dados=[
     ["Nome do paciente",pac.nome],["Data de nascimento",fmt(pac.data_nasc)],
     ["CPF",pac.cpf||"—"],["Telefone",pac.telefone||"—"],
@@ -58,6 +72,11 @@ export default function PatientDetailPage(){
 
   const openViewModal = (title: string, content: React.ReactNode) => {
     setModalView({ open: true, title, content });
+  };
+
+  const openAddModal = (type: string) => {
+    setAddForm({titulo:"",texto:"",data:today()});
+    setModalAdd({open:true,type});
   };
 
   return(
@@ -120,13 +139,17 @@ export default function PatientDetailPage(){
                       <div key={e.id} className="evo-card">
                         <div className="evo-header">
                           <span className="evo-num">{e.titulo}<span className="evo-date">{fmt(e.data)}</span></span>
+                          <div style={{display:"flex",gap:8}}>
+                            <button className="btn btn-outline btn-sm" onClick={()=>{setEditEvoId(e.id);setEvoForm({titulo:e.titulo,texto:e.texto,tipo:e.tipo,data:e.data});setModalEvo(true);}}>✏️ Editar</button>
+                            <button className="btn btn-danger btn-sm" onClick={()=>delEvo(e.id)}>🗑</button>
+                          </div>
                         </div>
                         <div className="evo-txt">{e.texto}</div>
                       </div>
                     ))}
                   </div>
                 ))}>📄 Ver atualizações</button>
-                <button className="btn btn-outline btn-sm" onClick={()=>{setEditEvoId(null);setEvoForm({titulo:"",texto:"",tipo:"clinica",data:today()});setModalEvo(true);}}>✏️ Editar</button>
+                <button className="btn btn-outline btn-sm" onClick={() => openAddModal("clinica")}>➕ Adicionar</button>
               </div>
             </div>
             {/* Evolução da Reabilitação */}
@@ -151,50 +174,83 @@ export default function PatientDetailPage(){
                       <div key={e.id} className="evo-card">
                         <div className="evo-header">
                           <span className="evo-num">{e.titulo}<span className="evo-date">{fmt(e.data)}</span></span>
+                          <div style={{display:"flex",gap:8}}>
+                            <button className="btn btn-outline btn-sm" onClick={()=>{setEditEvoId(e.id);setEvoForm({titulo:e.titulo,texto:e.texto,tipo:e.tipo,data:e.data});setModalEvo(true);}}>✏️ Editar</button>
+                            <button className="btn btn-danger btn-sm" onClick={()=>delEvo(e.id)}>🗑</button>
+                          </div>
                         </div>
                         <div className="evo-txt">{e.texto}</div>
                       </div>
                     ))}
                   </div>
                 ))}>📄 Ver evolução</button>
-                <button className="btn btn-outline btn-sm" onClick={()=>{setEditEvoId(null);setEvoForm({titulo:"",texto:"",tipo:"reabilitacao",data:today()});setModalEvo(true);}}>✏️ Editar</button>
+                <button className="btn btn-outline btn-sm" onClick={() => openAddModal("reabilitacao")}>➕ Adicionar</button>
               </div>
             </div>
             {/* Avaliação física */}
             <div className="pcard">
               <div className="pcard-head"><div className="pcard-title">🏋️ Avaliação física</div></div>
               <div className="pcard-divider"/>
-              <div className="pcard-text" style={{color:"var(--gray)"}}>Nenhuma avaliação física registrada.</div>
+              {avaliacao.length>0?(
+                <>
+                  <div className="pcard-num">{avaliacao[0].titulo}</div>
+                  <div className="pcard-divider" style={{margin:"8px 0"}}/>
+                  <div className="pcard-text">{avaliacao[0].texto}</div>
+                </>
+              ):(
+                <div className="pcard-text" style={{color:"var(--gray)"}}>Nenhuma avaliação física registrada.</div>
+              )}
               <div className="pcard-actions">
                 <button className="btn btn-outline btn-sm" onClick={() => openViewModal("Avaliação física", (
-                  <div className="pcard-text" style={{color:"var(--gray)"}}>Nenhuma avaliação física registrada.</div>
+                  <div className="evo-list">
+                    {avaliacao.length === 0 ? <p>Nenhuma avaliação física registrada.</p> : avaliacao.map(e => (
+                      <div key={e.id} className="evo-card">
+                        <div className="evo-header">
+                          <span className="evo-num">{e.titulo}<span className="evo-date">{fmt(e.data)}</span></span>
+                          <div style={{display:"flex",gap:8}}>
+                            <button className="btn btn-outline btn-sm" onClick={()=>{setEditEvoId(e.id);setEvoForm({titulo:e.titulo,texto:e.texto,tipo:e.tipo,data:e.data});setModalEvo(true);}}>✏️ Editar</button>
+                            <button className="btn btn-danger btn-sm" onClick={()=>delEvo(e.id)}>🗑</button>
+                          </div>
+                        </div>
+                        <div className="evo-txt">{e.texto}</div>
+                      </div>
+                    ))}
+                  </div>
                 ))}>📄 Ver avaliação</button>
-                <button className="btn btn-outline btn-sm">✏️ Editar</button>
+                <button className="btn btn-outline btn-sm" onClick={() => openAddModal("avaliacao")}>➕ Adicionar</button>
               </div>
             </div>
             {/* Histórico clínico */}
             <div className="pcard">
               <div className="pcard-head"><div className="pcard-title">📁 Histórico clínico</div></div>
               <div className="pcard-divider"/>
-              {clinicas.length>1?(
-                <div className="pcard-text">{clinicas[1].texto}</div>
+              {historico.length>0?(
+                <>
+                  <div className="pcard-num">{historico[0].titulo}</div>
+                  <div className="pcard-divider" style={{margin:"8px 0"}}/>
+                  <div className="pcard-text">{historico[0].texto}</div>
+                </>
               ):(
                 <div className="pcard-text" style={{color:"var(--gray)"}}>Nenhum histórico adicional.</div>
               )}
               <div className="pcard-actions">
                 <button className="btn btn-outline btn-sm" onClick={() => openViewModal("Histórico clínico", (
                   <div className="evo-list">
-                    {clinicas.length <= 1 ? <p style={{color:"var(--gray)"}}>Nenhum histórico adicional.</p> : clinicas.slice(1).map(e => (
+                    {historico.length === 0 ? <p style={{color:"var(--gray)"}}>Nenhum histórico adicional.</p> : historico.map(e => (
                       <div key={e.id} className="evo-card">
                         <div className="evo-header">
                           <span className="evo-num">{e.titulo}<span className="evo-date">{fmt(e.data)}</span></span>
+                          <div style={{display:"flex",gap:8}}>
+                            <button className="btn btn-outline btn-sm" onClick={()=>{setEditEvoId(e.id);setEvoForm({titulo:e.titulo,texto:e.texto,tipo:e.tipo,data:e.data});setModalEvo(true);}}>✏️ Editar</button>
+                            <button className="btn btn-danger btn-sm" onClick={()=>delEvo(e.id)}>🗑</button>
+                          </div>
                         </div>
                         <div className="evo-txt">{e.texto}</div>
                       </div>
                     ))}
                   </div>
                 ))}>📄 Ver histórico</button>
-                <button className="btn btn-outline btn-sm">✏️ Editar</button>
+                <button className="btn btn-outline btn-sm" onClick={() => openAddModal("historico")}>➕ Adicionar</button>
               </div>
             </div>
           </div>
@@ -259,6 +315,39 @@ export default function PatientDetailPage(){
         </div>
       )}
 
+      {/* MODAL ADD */}
+      {modalAdd.open && (
+        <div className="modal-overlay open" onClick={e=>e.target===e.currentTarget&&setModalAdd({open:false,type:""})}>
+          <div className="modal">
+            <button className="modal-close" onClick={()=>setModalAdd({open:false,type:""})}>✕</button>
+            <div className="modal-title">
+              {modalAdd.type==="clinica"?"Adicionar Atualização Clínica":
+               modalAdd.type==="reabilitacao"?"Adicionar Evolução da Reabilitação":
+               modalAdd.type==="avaliacao"?"Adicionar Avaliação Física":
+               "Adicionar Histórico Clínico"}
+            </div>
+            <div className="form-grid">
+              <div className="form-group">
+                <label className="form-label">Título *</label>
+                <input className="form-input" value={addForm.titulo} onChange={e=>setAddForm(f=>({...f,titulo:e.target.value}))}/>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Data</label>
+                <input className="form-input" type="date" value={addForm.data} onChange={e=>setAddForm(f=>({...f,data:e.target.value}))}/>
+              </div>
+              <div className="form-group form-full">
+                <label className="form-label">Descrição *</label>
+                <textarea className="form-textarea" rows={6} value={addForm.texto} onChange={e=>setAddForm(f=>({...f,texto:e.target.value}))}/>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-outline" onClick={()=>setModalAdd({open:false,type:""})}>Cancelar</button>
+              <button className="btn btn-lime" onClick={saveAdd}>Adicionar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MODAL EVOLUÇÃO */}
       {modalEvo&&(
         <div className="modal-overlay open" onClick={e=>e.target===e.currentTarget&&setModalEvo(false)}>
@@ -275,6 +364,8 @@ export default function PatientDetailPage(){
                 <select className="form-select" value={evoForm.tipo} onChange={e=>setEvoForm(f=>({...f,tipo:e.target.value}))}>
                   <option value="clinica">Clínica</option>
                   <option value="reabilitacao">Reabilitação</option>
+                  <option value="avaliacao">Avaliação</option>
+                  <option value="historico">Histórico</option>
                 </select>
               </div>
               <div className="form-group">
