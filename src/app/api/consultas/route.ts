@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { createServerClient } from "@/lib/supabase";
-import type { Consulta } from "@/types/database";
+import type { Consulta, ConsultaComNomes } from "@/types/database";
 
 async function auth() { const s = await getSession(); return s.userId ? s : null; }
 
 type ConsultaRow = Consulta & {
   pacientes: { nome: string } | null;
-  usuarios:  { nome: string } | null;
+  usuarios:  { nome: string; funcao: string } | null;
 };
 
-function mapConsulta(c: ConsultaRow) {
+function mapConsulta(c: ConsultaRow): ConsultaComNomes {
   const { pacientes, usuarios, ...rest } = c;
-  return { ...rest, paciente_nome: pacientes?.nome ?? "", profissional_nome: usuarios?.nome ?? "" };
+  return { 
+    ...rest, 
+    paciente_nome: pacientes?.nome ?? "", 
+    profissional_nome: usuarios?.nome ?? "",
+    profissional_funcao: usuarios?.funcao ?? ""
+  };
 }
 
 export async function GET(req: NextRequest) {
@@ -28,7 +33,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from("consultas")
-    .select("*, pacientes(nome), usuarios(nome)")
+    .select("*, pacientes(nome), usuarios(nome, funcao)")
     .order("data").order("hora");
 
   if (data)             query = query.eq("data", data);
@@ -53,7 +58,7 @@ export async function POST(req: NextRequest) {
   const { data: row, error } = await supabase
     .from("consultas")
     .insert({ paciente_id, profissional_id, data, hora, observacoes: body.observacoes || "" })
-    .select("*, pacientes(nome), usuarios(nome)")
+    .select("*, pacientes(nome), usuarios(nome, funcao)")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(mapConsulta(row as ConsultaRow), { status: 201 });

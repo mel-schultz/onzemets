@@ -21,6 +21,7 @@ async function main() {
 
   // ── Usuários ──────────────────────────────────────────────
   const usuarios = [
+    { nome: "Mel Schultz",           email: "mel.schultz@yahoo.com",   senha: "123456", funcao: "Super Admin",                   status: "ativo" },
     { nome: "Maria Clara Noman",     email: "mariaclara@onzemets.com", senha: "123456", funcao: "Médica Cardiologista",          status: "ativo" },
     { nome: "Ana Clara Lages",       email: "anaclara@onzemets.com",   senha: "123456", funcao: "Fisioterapeuta Cardiovascular", status: "ativo" },
     { nome: "Anne Oliveira",         email: "anne@onzemets.com",       senha: "123456", funcao: "Fisioterapeuta Cardiovascular", status: "ativo" },
@@ -96,6 +97,7 @@ async function main() {
   console.log(`✅ ${consInserted?.length} consultas criadas`);
 
   console.log("\n🎉 Seed concluído com sucesso!");
+  console.log("📧 Login Super Admin: mel.schultz@yahoo.com / 123456");
   console.log("📧 Login: mariaclara@onzemets.com / 123456\n");
 }
 

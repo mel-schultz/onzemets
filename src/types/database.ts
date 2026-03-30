@@ -33,10 +33,26 @@ export interface Usuario {
   nome: string;
   email: string;
   senha_hash: string;
-  funcao: string;
+  funcao: string; // Armazena múltiplos papéis separados por vírgula
   status: "ativo" | "inativo";
   criado_em: string;
 }
+
+export const FUNCOES_DISPONIVEIS = [
+  "Super Admin",
+  "Administrador",
+  "Médica Cardiologista",
+  "Fisioterapeuta Cardiovascular",
+  "Secretária"
+] as const;
+
+export const CORES_FUNCOES: Record<string, string> = {
+  "Super Admin": "#7c3aed", // Roxo
+  "Administrador": "#2563eb", // Azul
+  "Médica Cardiologista": "#e11d48", // Rosa/Vermelho
+  "Fisioterapeuta Cardiovascular": "#059669", // Verde
+  "Secretária": "#d97706" // Laranja
+};
 
 export interface Paciente {
   id: number;
@@ -74,6 +90,7 @@ export interface Consulta {
 export interface ConsultaComNomes extends Consulta {
   paciente_nome: string;
   profissional_nome: string;
+  profissional_funcao: string;
 }
 
 export interface Evolucao {
