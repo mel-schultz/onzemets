@@ -58,13 +58,48 @@ create table if not exists evolucoes (
   paciente_id bigint not null references pacientes(id) on delete cascade,
   titulo      text not null,
   texto       text not null,
-  tipo        text not null default 'clinica' check (tipo in ('clinica', 'reabilitacao')),
+  tipo        text not null default 'clinica' check (tipo in ('clinica', 'reabilitacao', 'avaliacao', 'historico')),
   data        date not null,
   criado_por  bigint references usuarios(id),
   criado_em   timestamptz not null default now()
 );
 
 create index if not exists idx_evolucoes_paciente on evolucoes(paciente_id);
+
+-- ── Evolução Clínica (Detalhes) ────────────────────────────────
+create table if not exists evolucoes_clinicas (
+  id                              bigint primary key generated always as identity,
+  evolucao_id                     bigint not null references evolucoes(id) on delete cascade,
+  paciente_id                     bigint not null references pacientes(id) on delete cascade,
+  medico_responsavel              text,
+  fisioterapeuta_responsavel      text,
+  pas_inicial                     numeric,
+  pad_inicial                     numeric,
+  fc_inicial                      numeric,
+  peso                            numeric,
+  pas_pico                        numeric,
+  pad_pico                        numeric,
+  fc_pico                         numeric,
+  borg_maximo                     numeric,
+  distancia                       numeric,
+  pas_5min_recuperacao            numeric,
+  pad_5min_recuperacao            numeric,
+  tempo_total_aerobico            numeric,
+  pas_repouso                     numeric,
+  pad_repouso                     numeric,
+  fc_media                        numeric,
+  descricao_treino_aerobico       text,
+  tempo_total_muscular            numeric,
+  descricao_treino_muscular       text,
+  obs_clinicas                    text,
+  pas_final                       numeric,
+  pad_final                       numeric,
+  fc_final                        numeric,
+  criado_em                       timestamptz not null default now()
+);
+
+create index if not exists idx_evolucoes_clinicas_evolucao on evolucoes_clinicas(evolucao_id);
+create index if not exists idx_evolucoes_clinicas_paciente on evolucoes_clinicas(paciente_id);
 
 -- ── RLS (Row Level Security) ──────────────────────────────────
 -- Desabilitado: o acesso é controlado pela service_role key no servidor.
@@ -74,3 +109,4 @@ alter table usuarios  disable row level security;
 alter table pacientes disable row level security;
 alter table consultas disable row level security;
 alter table evolucoes disable row level security;
+alter table evolucoes_clinicas disable row level security;

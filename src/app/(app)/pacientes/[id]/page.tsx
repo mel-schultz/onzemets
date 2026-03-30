@@ -2,6 +2,7 @@
 import{useEffect,useState,useCallback}from"react";
 import{useRouter,useParams}from"next/navigation";
 import RichTextEditor from"@/components/RichTextEditor";
+import ModalEvolucaoClinica from"@/components/ModalEvolucaoClinica";
 interface Pac{id:number;nome:string;sexo:string|null;data_nasc:string|null;ultima_consulta:string|null;proxima_consulta:string|null;faltas:number;cpf:string|null;telefone:string|null;telefone2:string|null;email:string|null;cep:string|null;rua:string|null;numero:string|null;complemento:string|null;bairro:string|null;cidade:string|null;estado:string|null;}
 interface Evo{id:number;titulo:string;texto:string;tipo:string;data:string;criado_por_nome:string|null;}
 function fmt(iso:string|null){if(!iso)return"—";const[y,m,d]=iso.split("-");return`${d}/${m}/${y}`;}
@@ -15,6 +16,7 @@ export default function PatientDetailPage(){
   const[evos,setEvos]=useState<Evo[]>([]);
   const[tab,setTab]=useState<"perfil"|"dados"|"evolucoes">("perfil");
   const[modalEvo,setModalEvo] = useState(false);
+  const[modalClinica,setModalClinica] = useState(false);
   const[modalView,setModalView] = useState<{open:boolean;title:string;content:React.ReactNode}>({open:false,title:"",content:null});
   const[modalAdd,setModalAdd] = useState<{open:boolean;type:string}>({open:false,type:""});
   const[editEvoId,setEditEvoId]=useState<number|null>(null);
@@ -39,6 +41,13 @@ export default function PatientDetailPage(){
     const res=await fetch(url,{method:editEvoId?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(evoForm)});
     if(!res.ok){const d=await res.json();showToast(d.error||"Erro","error");return;}
     setModalEvo(false);showToast("Evolução salva!","success");load();
+  }
+
+  async function saveClinica(data:any){
+    const evoData={...data,tipo:"clinica"};
+    const res=await fetch(`/api/pacientes/${id}/evolucoes`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(evoData)});
+    if(!res.ok){const d=await res.json();showToast(d.error||"Erro","error");return;}
+    setModalClinica(false);showToast("Evolução clínica adicionada!","success");load();
   }
 
   async function saveAdd(){
@@ -155,7 +164,7 @@ export default function PatientDetailPage(){
                     ))}
                   </div>
                 ))}>📄 Ver atualizações</button>
-                <button className="btn btn-outline btn-sm" onClick={() => openAddModal("clinica")}>➕ Adicionar</button>
+                <button className="btn btn-outline btn-sm" onClick={() => setModalClinica(true)}>➕ Adicionar</button>
               </div>
             </div>
             {/* Evolução da Reabilitação */}
@@ -320,6 +329,13 @@ export default function PatientDetailPage(){
           </div>
         </div>
       )}
+
+      {/* MODAL EVOLUÇÃO CLÍNICA */}
+      <ModalEvolucaoClinica
+        open={modalClinica}
+        onClose={() => setModalClinica(false)}
+        onSave={saveClinica}
+      />
 
       {/* MODAL ADD */}
       {modalAdd.open && (
