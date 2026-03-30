@@ -5,7 +5,7 @@ import type { Consulta } from "@/types/database";
 
 type ConsultaRow = Consulta & {
   pacientes: { nome: string } | null;
-  usuarios:  { nome: string } | null;
+  usuarios:  { nome: string; funcao: string } | null;
 };
 
 export async function GET() {
@@ -17,7 +17,7 @@ export async function GET() {
 
   const { data: rows, error } = await supabase
     .from("consultas")
-    .select("*, pacientes(nome), usuarios(nome)")
+    .select("*, pacientes(nome), usuarios(nome, funcao)")
     .eq("data", hoje)
     .order("hora");
 
@@ -25,7 +25,12 @@ export async function GET() {
 
   const mapped = ((rows ?? []) as ConsultaRow[]).map((c) => {
     const { pacientes, usuarios, ...rest } = c;
-    return { ...rest, paciente_nome: pacientes?.nome ?? "", profissional_nome: usuarios?.nome ?? "" };
+    return { 
+      ...rest, 
+      paciente_nome: pacientes?.nome ?? "", 
+      profissional_nome: usuarios?.nome ?? "",
+      profissional_funcao: usuarios?.funcao ?? ""
+    };
   });
   return NextResponse.json(mapped);
 }
