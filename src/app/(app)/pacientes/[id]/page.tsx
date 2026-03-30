@@ -13,7 +13,8 @@ export default function PatientDetailPage(){
   const[pac,setPac]=useState<Pac|null>(null);
   const[evos,setEvos]=useState<Evo[]>([]);
   const[tab,setTab]=useState<"perfil"|"dados"|"evolucoes">("perfil");
-  const[modalEvo,setModalEvo]=useState(false);
+  const[modalEvo,setModalEvo] = useState(false);
+  const[modalView,setModalView] = useState<{open:boolean;title:string;content:React.ReactNode}>({open:false,title:"",content:null});
   const[editEvoId,setEditEvoId]=useState<number|null>(null);
   const[evoForm,setEvoForm]=useState({titulo:"",texto:"",tipo:"clinica",data:today()});
   const[toast,setToast]=useState<{msg:string;type:string}|null>(null);
@@ -54,6 +55,10 @@ export default function PatientDetailPage(){
     ["Complemento",pac.complemento||"—"],["CEP",pac.cep||"—"],
     ["Bairro",pac.bairro||"—"],["Cidade",pac.cidade||"—"],["Estado",pac.estado||"—"],
   ];
+
+  const openViewModal = (title: string, content: React.ReactNode) => {
+    setModalView({ open: true, title, content });
+  };
 
   return(
     <div>
@@ -109,7 +114,18 @@ export default function PatientDetailPage(){
                 <div className="pcard-text">Nenhuma atualização clínica.</div>
               )}
               <div className="pcard-actions">
-                <button className="btn btn-outline btn-sm" onClick={()=>setTab("evolucoes")}>📄 Ver atualizações</button>
+                <button className="btn btn-outline btn-sm" onClick={() => openViewModal("Atualizações clínicas", (
+                  <div className="evo-list">
+                    {clinicas.length === 0 ? <p>Nenhuma atualização clínica.</p> : clinicas.map(e => (
+                      <div key={e.id} className="evo-card">
+                        <div className="evo-header">
+                          <span className="evo-num">{e.titulo}<span className="evo-date">{fmt(e.data)}</span></span>
+                        </div>
+                        <div className="evo-txt">{e.texto}</div>
+                      </div>
+                    ))}
+                  </div>
+                ))}>📄 Ver atualizações</button>
                 <button className="btn btn-outline btn-sm" onClick={()=>{setEditEvoId(null);setEvoForm({titulo:"",texto:"",tipo:"clinica",data:today()});setModalEvo(true);}}>✏️ Editar</button>
               </div>
             </div>
@@ -129,7 +145,18 @@ export default function PatientDetailPage(){
                 <div className="pcard-text">Nenhuma evolução de reabilitação.</div>
               )}
               <div className="pcard-actions">
-                <button className="btn btn-outline btn-sm" onClick={()=>setTab("evolucoes")}>📄 Ver evolução</button>
+                <button className="btn btn-outline btn-sm" onClick={() => openViewModal("Evolução da Reabilitação", (
+                  <div className="evo-list">
+                    {reab.length === 0 ? <p>Nenhuma evolução de reabilitação.</p> : reab.map(e => (
+                      <div key={e.id} className="evo-card">
+                        <div className="evo-header">
+                          <span className="evo-num">{e.titulo}<span className="evo-date">{fmt(e.data)}</span></span>
+                        </div>
+                        <div className="evo-txt">{e.texto}</div>
+                      </div>
+                    ))}
+                  </div>
+                ))}>📄 Ver evolução</button>
                 <button className="btn btn-outline btn-sm" onClick={()=>{setEditEvoId(null);setEvoForm({titulo:"",texto:"",tipo:"reabilitacao",data:today()});setModalEvo(true);}}>✏️ Editar</button>
               </div>
             </div>
@@ -139,7 +166,9 @@ export default function PatientDetailPage(){
               <div className="pcard-divider"/>
               <div className="pcard-text" style={{color:"var(--gray)"}}>Nenhuma avaliação física registrada.</div>
               <div className="pcard-actions">
-                <button className="btn btn-outline btn-sm">📄 Ver avaliação</button>
+                <button className="btn btn-outline btn-sm" onClick={() => openViewModal("Avaliação física", (
+                  <div className="pcard-text" style={{color:"var(--gray)"}}>Nenhuma avaliação física registrada.</div>
+                ))}>📄 Ver avaliação</button>
                 <button className="btn btn-outline btn-sm">✏️ Editar</button>
               </div>
             </div>
@@ -153,7 +182,18 @@ export default function PatientDetailPage(){
                 <div className="pcard-text" style={{color:"var(--gray)"}}>Nenhum histórico adicional.</div>
               )}
               <div className="pcard-actions">
-                <button className="btn btn-outline btn-sm" onClick={()=>setTab("evolucoes")}>📄 Ver histórico</button>
+                <button className="btn btn-outline btn-sm" onClick={() => openViewModal("Histórico clínico", (
+                  <div className="evo-list">
+                    {clinicas.length <= 1 ? <p style={{color:"var(--gray)"}}>Nenhum histórico adicional.</p> : clinicas.slice(1).map(e => (
+                      <div key={e.id} className="evo-card">
+                        <div className="evo-header">
+                          <span className="evo-num">{e.titulo}<span className="evo-date">{fmt(e.data)}</span></span>
+                        </div>
+                        <div className="evo-txt">{e.texto}</div>
+                      </div>
+                    ))}
+                  </div>
+                ))}>📄 Ver histórico</button>
                 <button className="btn btn-outline btn-sm">✏️ Editar</button>
               </div>
             </div>
@@ -199,6 +239,22 @@ export default function PatientDetailPage(){
                   <div className="evo-txt">{e.texto}</div>
                 </div>
               ))}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL VIEW (GENERIC) */}
+      {modalView.open && (
+        <div className="modal-overlay open" onClick={e=>e.target===e.currentTarget&&setModalView(f=>({...f,open:false}))}>
+          <div className="modal">
+            <button className="modal-close" onClick={()=>setModalView(f=>({...f,open:false}))}>✕</button>
+            <div className="modal-title">{modalView.title}</div>
+            <div style={{maxHeight: '60vh', overflowY: 'auto'}}>
+              {modalView.content}
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-lime" onClick={()=>setModalView(f=>({...f,open:false}))}>Fechar</button>
+            </div>
           </div>
         </div>
       )}
