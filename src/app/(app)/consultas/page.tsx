@@ -33,6 +33,7 @@ export default function ConsultasPage() {
   const [pacs, setPacs] = useState<Pac[]>([]);
   const [usrs, setUsrs] = useState<Usr[]>([]);
   const [modal, setModal] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState({ paciente_id: "", profissional_id: "", data: today(), hora: "08:00", observacoes: "" });
   const [toast, setToast] = useState<{ msg: string; type: string } | null>(null);
   const days = Array.from({ length: 6 }, (_, i) => off(i));
@@ -50,7 +51,7 @@ export default function ConsultasPage() {
       return;
     }
     setConsultas(await res.json());
-  }, [router]);
+  }, [router, days]);
 
   useEffect(() => {
     load();
@@ -58,32 +59,71 @@ export default function ConsultasPage() {
     fetch("/api/usuarios").then(r => r.json()).then(d => { if (Array.isArray(d)) setUsrs(d); });
   }, [load]);
 
-  async function openModal() {
-    setForm({ paciente_id: String(pacs[0]?.id || ""), profissional_id: String(usrs[0]?.id || ""), data: today(), hora: "08:00", observacoes: "" });
-    setModal(true);
+  async function openModal(consultaId?: number) {
+    if (consultaId) {
+      // Modo edição
+      const consulta = consultas.find(c => c.id === consultaId);
+      if (consulta) {
+        setEditingId(consultaId);
+        setForm({
+          paciente_id: String(consulta.paciente_id),
+          profissional_id: String(consulta.profissional_id),
+          data: consulta.data,
+          hora: consulta.hora,
+          observacoes: consulta.observacoes || ""
+        });
+        setModal(true);
+      }
+    } else {
+      // Modo novo
+      setEditingId(null);
+      setForm({ paciente_id: String(pacs[0]?.id || ""), profissional_id: String(usrs[0]?.id || ""), data: today(), hora: "08:00", observacoes: "" });
+      setModal(true);
+    }
   }
+
   async function save() {
     if (!form.paciente_id || !form.profissional_id || !form.data || !form.hora) {
       showToast("Preencha todos os campos", "error");
       return;
     }
-    const res = await fetch("/api/consultas", {
-      method: "POST",
+    
+    const body = {
+      paciente_id: Number(form.paciente_id),
+      profissional_id: Number(form.profissional_id),
+      data: form.data,
+      hora: form.hora,
+      observacoes: form.observacoes
+    };
+
+    const url = editingId ? `/api/consultas/${editingId}` : "/api/consultas";
+    const method = editingId ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, paciente_id: Number(form.paciente_id), profissional_id: Number(form.profissional_id) })
+      body: JSON.stringify(body)
     });
+
     if (!res.ok) {
       const d = await res.json();
       showToast(d.error || "Erro", "error");
       return;
     }
+
     setModal(false);
-    showToast("Consulta agendada!", "success");
+    showToast(editingId ? "Consulta atualizada!" : "Consulta agendada!", "success");
     load();
   }
+
   async function del(id: number) {
     if (!confirm("Cancelar esta consulta?")) return;
-    await fetch(`/api/consultas/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/consultas/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const d = await res.json();
+      showToast(d.error || "Erro", "error");
+      return;
+    }
     showToast("Consulta cancelada.", "success");
     load();
   }
@@ -105,7 +145,7 @@ export default function ConsultasPage() {
       <div className="card">
         <div className="page-header">
           <div className="page-title">Grade de Consultas</div>
-          <button className="btn btn-lime" onClick={openModal}>+ Agendar Consulta</button>
+          <button className="btn btn-lime" onClick={() => openModal()}>+ Agendar Consulta</button>
         </div>
         <div className="sched-wrap">
           <div className="sched-grid">
@@ -124,12 +164,14 @@ export default function ConsultasPage() {
                       {c && (
                         <div 
                           className="sched-event" 
-                          onClick={() => router.push(`/pacientes/${c.paciente_id}`)}
                           style={{ 
                             backgroundColor: getRoleColor(c.profissional_funcao),
                             color: '#fff',
-                            borderColor: 'transparent'
+                            borderColor: 'transparent',
+                            position: 'relative',
+                            cursor: 'pointer'
                           }}
+                          onClick={() => openModal(c.id)}
                         >
                           <span style={{ fontWeight: 'bold' }}>{c.paciente_nome.split(" ")[0]}</span>
                           <span style={{ fontSize: '10px', opacity: 0.9, display: 'block' }}>{c.profissional_nome.split(" ")[0]}</span>
@@ -153,17 +195,19 @@ export default function ConsultasPage() {
         <div className="modal-overlay open" onClick={e => e.target === e.currentTarget && setModal(false)}>
           <div className="modal">
             <button className="modal-close" onClick={() => setModal(false)}>✕</button>
-            <div className="modal-title">Agendar Consulta</div>
+            <div className="modal-title">{editingId ? "Editar Consulta" : "Agendar Consulta"}</div>
             <div className="form-grid">
               <div className="form-group form-full">
                 <label className="form-label">Paciente</label>
                 <select className="form-select" value={form.paciente_id} onChange={e => set("paciente_id", e.target.value)}>
+                  <option value="">Selecione um paciente</option>
                   {pacs.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                 </select>
               </div>
               <div className="form-group form-full">
                 <label className="form-label">Profissional</label>
                 <select className="form-select" value={form.profissional_id} onChange={e => set("profissional_id", e.target.value)}>
+                  <option value="">Selecione um profissional</option>
                   {usrs.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}
                 </select>
               </div>
@@ -184,7 +228,7 @@ export default function ConsultasPage() {
             </div>
             <div className="modal-actions">
               <button className="btn btn-outline" onClick={() => setModal(false)}>Cancelar</button>
-              <button className="btn btn-lime" onClick={save}>Agendar</button>
+              <button className="btn btn-lime" onClick={save}>{editingId ? "Atualizar" : "Agendar"}</button>
             </div>
           </div>
         </div>

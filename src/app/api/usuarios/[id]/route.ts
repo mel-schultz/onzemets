@@ -14,6 +14,10 @@ function isAdmin(funcao: string) {
   return roles.includes("Administrador") || roles.includes("Super Admin");
 }
 
+function isSuper(funcao: string) {
+  return funcao.split(",").map(r => r.trim()).includes("Super Admin");
+}
+
 type Params = Promise<{ id: string }>;
 type UsuarioSafe = Omit<Usuario, "senha_hash">;
 
@@ -51,10 +55,11 @@ export async function PUT(req: NextRequest, { params }: { params: Params }) {
   // 1. Usuário pode editar seu próprio Nome, E-mail e Senha.
   // 2. Apenas Admin/Super Admin podem editar Funções e Status de outros.
   // 3. Apenas Super Admin pode promover alguém a Super Admin.
+  // 4. Super Admin pode editar TODOS os dados de qualquer usuário.
   
   const isEditingSelf = Number(id) === session.userId;
   const sessionIsAdmin = isAdmin(session.userFuncao || "");
-  const sessionIsSuper = (session.userFuncao || "").split(",").includes("Super Admin");
+  const sessionIsSuper = isSuper(session.userFuncao || "");
 
   if (!isEditingSelf && !sessionIsAdmin) {
     return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
@@ -97,9 +102,9 @@ export async function DELETE(_: NextRequest, { params }: { params: Params }) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   
-  // Apenas Admin/Super Admin podem deletar usuários
-  if (!isAdmin(session.userFuncao || "")) {
-    return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
+  // Apenas Super Admin podem deletar usuários
+  if (!isSuper(session.userFuncao || "")) {
+    return NextResponse.json({ error: "Apenas Super Admin pode remover usuários." }, { status: 403 });
   }
 
   const { id } = await params;

@@ -14,6 +14,10 @@ function isAdmin(funcao: string) {
   return roles.includes("Administrador") || roles.includes("Super Admin");
 }
 
+function isSuper(funcao: string) {
+  return funcao.split(",").map(r => r.trim()).includes("Super Admin");
+}
+
 type UsuarioSafe = Omit<Usuario, "senha_hash">;
 
 export async function GET() {
@@ -39,9 +43,9 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
 
-  // Apenas Admin e Super Admin podem criar novos usuários
-  if (!isAdmin(session.userFuncao || "")) {
-    return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
+  // Apenas Super Admin podem criar novos usuários
+  if (!isSuper(session.userFuncao || "")) {
+    return NextResponse.json({ error: "Apenas Super Admin pode criar usuários." }, { status: 403 });
   }
 
   const { nome, email, senha, funcao, status } = await req.json();
@@ -51,9 +55,8 @@ export async function POST(req: NextRequest) {
 
   // Apenas Super Admin pode atribuir o papel de Super Admin
   const targetRoles = (funcao || "").split(",").map((r: string) => r.trim());
-  const sessionIsSuper = (session.userFuncao || "").split(",").includes("Super Admin");
-  if (targetRoles.includes("Super Admin") && !sessionIsSuper) {
-    return NextResponse.json({ error: "Apenas Super Admin pode atribuir este papel." }, { status: 403 });
+  if (targetRoles.includes("Super Admin")) {
+    return NextResponse.json({ error: "Apenas Super Admin pode criar outros Super Admins." }, { status: 403 });
   }
 
   const supabase = createServerClient();

@@ -126,6 +126,30 @@ export default function UsuariosPage() {
     load();
   }
 
+  async function del(id: number) {
+    if (!confirm("Remover este usuário? Esta ação não pode ser desfeita.")) return;
+    const res = await fetch(`/api/usuarios/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const d = await res.json();
+      showToast(d.error || "Erro", "error");
+      return;
+    }
+    showToast("Usuário removido.", "success");
+    load();
+  }
+
+  async function resetarSenha(id: number, nome: string) {
+    if (!confirm(`Enviar e-mail de recuperação de senha para ${nome}?`)) return;
+    const res = await fetch(`/api/usuarios/${id}/resetar-senha`, { method: "POST" });
+    if (!res.ok) {
+      const d = await res.json();
+      showToast(d.error || "Erro", "error");
+      return;
+    }
+    const data = await res.json();
+    showToast(`E-mail enviado para ${data.usuario.email}`, "success");
+  }
+
   const toggleRole = (role: string) => {
     setForm(f => {
       const current = f.funcao;
@@ -137,7 +161,10 @@ export default function UsuariosPage() {
     });
   };
 
-  const canEditRoles = me && isAdmin(me.funcao);
+  const canEditUsers = me && isAdmin(me.funcao);
+  const canCreateUsers = me && isSuper(me.funcao);
+  const canDeleteUsers = me && isSuper(me.funcao);
+  const canResetPassword = me && isSuper(me.funcao);
   const isSuperAdmin = me && isSuper(me.funcao);
 
   return (
@@ -145,7 +172,7 @@ export default function UsuariosPage() {
       <div className="card">
         <div className="page-header">
           <div className="page-title">Usuários</div>
-          {canEditRoles && (
+          {canCreateUsers && (
             <button className="btn btn-lime" onClick={openAdd}>+ Cadastrar</button>
           )}
         </div>
@@ -177,8 +204,14 @@ export default function UsuariosPage() {
                   <td><span className={`pill pill-${u.status}`}>{u.status === "ativo" ? "Ativo" : "Inativo"}</span></td>
                   <td>
                     <div className="actions">
-                      {(canEditRoles || (me && me.id === u.id)) && (
+                      {(canEditUsers || (me && me.id === u.id)) && (
                         <button className="icon-btn" title="Editar" onClick={() => openEdit(u)}>✏️</button>
+                      )}
+                      {canResetPassword && me && me.id !== u.id && (
+                        <button className="icon-btn" title="Reenviar Senha" onClick={() => resetarSenha(u.id, u.nome)}>🔑</button>
+                      )}
+                      {canDeleteUsers && me && me.id !== u.id && (
+                        <button className="icon-btn" title="Remover" onClick={() => del(u.id)} style={{ color: 'var(--red)' }}>🗑️</button>
                       )}
                     </div>
                   </td>
@@ -208,7 +241,7 @@ export default function UsuariosPage() {
                 <input className="form-input" type="password" value={form.senha} onChange={e => s("senha", e.target.value)} />
               </div>
               
-              {canEditRoles && (
+              {canEditUsers && (
                 <>
                   <div className="form-group form-full">
                     <label className="form-label">Funções</label>
