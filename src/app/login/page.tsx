@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 export default function LoginPage() {
   const router = useRouter();
   const [screen, setScreen] = useState<"login"|"esqueci"|"enviado">("login");
-  const [email, setEmail]   = useState("mariaclara@onzemets.com");
+  const [email, setEmail]   = useState("mel.schultz@yahoo.com");
   const [senha, setSenha]   = useState("123456");
   const [errEmail, setErrEmail] = useState("");
   const [errSenha, setErrSenha] = useState("");
@@ -24,14 +24,29 @@ export default function LoginPage() {
     if (!senha) { setErrSenha("Digite sua senha."); return; }
     setLoading(true);
     try {
+      console.log("[frontend] Enviando requisição de login...");
       const res = await fetch("/api/auth/login", {
-        method:"POST", headers:{"Content-Type":"application/json"},
+        method:"POST", 
+        headers:{"Content-Type":"application/json"},
         body: JSON.stringify({email,senha}),
       });
+      
+      console.log("[frontend] Status da resposta:", res.status);
       const data = await res.json();
-      if (!res.ok) { setErrEmail(data.error || "Credenciais incorretas."); return; }
+      console.log("[frontend] Resposta recebida:", data);
+      
+      if (!res.ok) { 
+        setErrEmail(data.error || "Credenciais incorretas."); 
+        console.error("[frontend] Erro de login:", data.error);
+        return; 
+      }
+      
+      console.log("[frontend] Login bem-sucedido, redirecionando...");
       router.push("/dashboard");
-    } catch { setErrEmail("Erro de conexão."); }
+    } catch (err) { 
+      console.error("[frontend] Erro de conexão:", err);
+      setErrEmail("Erro de conexão. Verifique sua internet e tente novamente."); 
+    }
     finally { setLoading(false); }
   }
 
