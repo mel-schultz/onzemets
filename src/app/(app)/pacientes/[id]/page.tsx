@@ -133,6 +133,7 @@ export default function PatientDetailPage(){
                 <>
                   <div className="pcard-date">{fmt(clinicas[0].data)}</div>
                   <div className="pcard-text">{clinicas[0].titulo}</div>
+                  <div className="pcard-content">{renderEvoContent(clinicas[0])}</div>
                 </>
               ):(
                 <div className="pcard-text">Nenhuma atualização clínica.</div>
@@ -167,7 +168,7 @@ export default function PatientDetailPage(){
                 <>
                   <div className="pcard-num">{reab[0].titulo}</div>
                   <div className="pcard-divider" style={{margin:"8px 0"}}/>
-                  <div className="pcard-text">{reab[0].texto.substring(0,100)}...</div>
+                  <div className="pcard-content">{renderEvoContent(reab[0])}</div>
                 </>
               ):(
                 <div className="pcard-text">Nenhuma evolução de reabilitação.</div>
@@ -200,7 +201,7 @@ export default function PatientDetailPage(){
                 <>
                   <div className="pcard-num">{avaliacao[0].titulo}</div>
                   <div className="pcard-divider" style={{margin:"8px 0"}}/>
-                  <div className="pcard-text">{avaliacao[0].texto.substring(0,100)}...</div>
+                  <div className="pcard-content">{renderEvoContent(avaliacao[0])}</div>
                 </>
               ):(
                 <div className="pcard-text" style={{color:"var(--gray)"}}>Nenhuma avaliação física registrada.</div>
@@ -233,7 +234,7 @@ export default function PatientDetailPage(){
                 <>
                   <div className="pcard-num">{historico[0].titulo}</div>
                   <div className="pcard-divider" style={{margin:"8px 0"}}/>
-                  <div className="pcard-text">{historico[0].texto.substring(0,100)}...</div>
+                  <div className="pcard-content">{renderEvoContent(historico[0])}</div>
                 </>
               ):(
                 <div className="pcard-text" style={{color:"var(--gray)"}}>Nenhum histórico adicional.</div>

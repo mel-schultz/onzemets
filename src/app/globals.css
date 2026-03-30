@@ -428,6 +428,28 @@ td { padding: 12px 14px; font-size: 14px; vertical-align: middle; }
 .pcard-date { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--navy); }
 .pcard-num { font-size: 20px; font-weight: 700; }
 .pcard-text { font-size: 13px; color: var(--gray); line-height: 1.65; }
+.pcard-content {
+  font-size: 13px;
+  color: var(--navy);
+  line-height: 1.65;
+  margin: 12px 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+.pcard-content p { margin: 8px 0; }
+.pcard-content ul,
+.pcard-content ol { margin: 8px 0 8px 20px; }
+.pcard-content li { margin: 4px 0; }
+.pcard-content strong { font-weight: 700; }
+.pcard-content em { font-style: italic; }
+.pcard-content u { text-decoration: underline; }
+.pcard-content s { text-decoration: line-through; }
+.pcard-content a { color: var(--lime-dark); text-decoration: underline; }
+.pcard-content img { max-width: 100%; height: auto; margin: 8px 0; border-radius: 4px; }
+.pcard-content h1 { font-size: 20px; font-weight: 800; margin: 10px 0 6px; }
+.pcard-content h2 { font-size: 18px; font-weight: 700; margin: 8px 0 4px; }
+.pcard-content h3 { font-size: 16px; font-weight: 600; margin: 6px 0 3px; }
 .pcard-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 
 /* Dados do paciente */
